@@ -22,17 +22,11 @@ download-jdk-tarball:
       - file: java-install-dir
 
 unpack-jdk-tarball:
-  archive.extracted:
-    - name: {{ java.prefix }}
-    - source: file://{{ tarball_file }}
-    {%- if java.source_hash %}
-    - source_hash: sha256={{ java.source_hash }}
-    {%- endif %}
-    - archive_format: tar
-    - tar_options: z
-    - user: root
-    - group: root
-    - if_missing: {{ java.java_real_home }}
+  cmd.run:
+    - name: tar zxf {{ tarball_file }}
+    - cwd: {{ java.prefix }}
+    - runas: root
+    - creates: java.java_real_home
     - onchanges:
       - cmd: download-jdk-tarball
 
@@ -44,7 +38,7 @@ create-java-home:
     - priority: 30
     - onlyif: test -d {{ java.java_real_home }} && test ! -L {{ java.java_home }}
     - require:
-      - archive: unpack-jdk-tarball
+      - cmd: unpack-jdk-tarball
 
 update-java-home-symlink:
   file.symlink:
